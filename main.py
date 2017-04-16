@@ -156,13 +156,11 @@ if __name__ == "__main__":
                 continue
             if len(line.lstrip()) == 0:
                 continue
-            print "// "+line
             # TODO: I don't know how to translate it to go
             if line.find("{X:Type}") != -1:
                 continue
             tlObj = parse(line)
+            tlObjects.append((line, tlObj))
+        for line, tlObj in tlObjects:
+            print "// "+line
             tlObj.translate()
-            tlObjects.append(tlObj)
-        # for tlObj in tlObjects:
-        #     print " "
-        #     tlObj.translate()
