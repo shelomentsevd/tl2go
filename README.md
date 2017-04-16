@@ -2,4 +2,4 @@
 
 Simple translator from TL to Go
 
-Work in progress
+Needed for https://github.com/shelomentsevd/telegram-api
