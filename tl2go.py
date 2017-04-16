@@ -82,6 +82,8 @@ class TLObject:
         # Structure
         print "const crc_"+self.name+" = 0x"+self.crc
         print "type TL_"+self.name+" struct {"
+        if self.flags:
+            print "Flags int32"
         for field in self.fields:
             # print field[0].capitalize(), tl2goType(field[1]), '`json:"'+field[0]+'"`', "// "+field[2]
             print field[0].capitalize(), tl2goType(field[1]), "// "+field[2]
@@ -109,6 +111,7 @@ class TLObject:
                     print field[0] + ":=" + decodeField(goType)
             # Fill structure
             print "r = TL_" + self.name + "{"
+            print "Flags: flags,"
             for field in self.fields:
                 capField = field[0].capitalize()
                 print capField + ":" + field[0] + ","
@@ -143,6 +146,8 @@ class TLObject:
                     print "if e."+capField+">0 {"
                 elif goType == "string":
                     print "if e."+capField+"!=\"\"{"
+                elif goType.startswith("[]"):
+                    print "if len(e."+capField+") != 0 {"
                 else:
                     print "if _, ok := (e."+capField+").(TL_null); !ok {"
                 print "flags |= (1<<"+field[3]+")"
@@ -219,8 +224,9 @@ if __name__ == "__main__":
                 continue
             # TODO: I don't know how to translate it to go
             if line.find("{X:Type}") != -1:
-                continue
-            tlObj = parse(line)
+                tlObj = parse(line.replace("{X:Type}", ""))
+            else:
+                tlObj = parse(line)
             tlObjects.append((line, tlObj))
         for line, tlObj in tlObjects:
             print "// "+line
