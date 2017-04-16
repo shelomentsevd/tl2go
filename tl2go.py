@@ -49,15 +49,15 @@ def decodeField(fieldType):
     elif fieldType == "[]int64":
         return "m.VectorLong()"
     elif fieldType == "[]string":
-        return "x.VectorString()"
+        return "m.VectorString()"
     elif fieldType == "int32":
-        return "x.Int()"
+        return "m.Int()"
     elif fieldType == "int64":
-        return "x.Long()"
+        return "m.Long()"
     elif fieldType == "float64":
-        return "x.Double()"
+        return "m.Double()"
     elif fieldType == "string":
-        return "x.String()"
+        return "m.String()"
     else:
         raise ValueError("WRONG TYPE: " + fieldType)
 
@@ -205,6 +205,8 @@ if __name__ == "__main__":
         print "package "+sys.argv[2]
     else:
         print "package "+tlFile.replace(".tl", "")
+
+    print "import \"fmt\""
 
     tlObjects = []
     with open(tlFile, "r") as inputfile:
