@@ -9,7 +9,9 @@ def tl2goType(tlType):
 		return "int64"
 	if tlType == "double":
 		return "float64"
-	# TODO Vectors!
+	if tlType.find("Vector") != -1:
+		fpos, spos = tlType.find("<"), tlType.find(">")
+		return "[]" + tl2goType(tlType[fpos + 1:spos])
 	return "TL"
 
 class TLObject:
@@ -69,7 +71,13 @@ class TLObject:
 				if goType == "TL":
 					print "x.Bytes(e."+capField+".encode())"
 				elif goType == "[]TL":
-					print "x.Vector(e."+capField+")"
+					print "x.Vector(e." + capField + ")"
+				elif goType == "[]int32":
+					print "x.VectorInt(e." + capField + ")"
+				elif goType == "[]int64":
+					print "x.VectorLong(e." + capField + ")"
+				elif goType == "[]string":
+					print "x.VectorString(e." + capField + ")"
 				elif goType == "int32":
 					print "x.Int(e."+capField+")"
 				elif goType == "int64":
