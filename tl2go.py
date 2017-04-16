@@ -39,6 +39,28 @@ def encodeField(fieldName, fieldType):
     else:
         raise ValueError("WRONG TYPE: " + fieldType)
 
+def decodeField(fieldType):
+    if fieldType == "TL":
+        return "m.Object()"
+    elif fieldType == "[]TL":
+        return "m.Vector()"
+    elif fieldType == "[]int32":
+        return "m.VectorInt()"
+    elif fieldType == "[]int64":
+        return "m.VectorLong()"
+    elif fieldType == "[]string":
+        return "x.VectorString()"
+    elif fieldType == "int32":
+        return "x.Int()"
+    elif fieldType == "int64":
+        return "x.Long()"
+    elif fieldType == "float64":
+        return "x.Double()"
+    elif fieldType == "string":
+        return "x.String()"
+    else:
+        raise ValueError("WRONG TYPE: " + fieldType)
+
 class TLObject:
     name = str()
     crc = str()
@@ -64,6 +86,40 @@ class TLObject:
             # print field[0].capitalize(), tl2goType(field[1]), '`json:"'+field[0]+'"`', "// "+field[2]
             print field[0].capitalize(), tl2goType(field[1]), "// "+field[2]
         print "}"
+
+    def decoding(self):
+        print "case crc_"+self.name+":"
+        if self.flags:
+            print "flags := m.Int()"
+            # Get all fields
+            for field in self.fields:
+                goType = tl2goType(field[1])
+                if field[3] != -1:
+                    if goType == "bool":
+                        if field[1] == "true":
+                            print field[0]+":="+"flags&(1<<"+field[3]+")!=0"
+                        else:
+                            print field[0]+":="+"flags&(1<<"+field[3]+")==0"
+                    else:
+                        print "var "+field[0]+" "+goType
+                        print "if flags&(1<<"+field[3]+")!=0{"
+                        print field[0]+"="+decodeField(goType)
+                        print "}"
+                else:
+                    print field[0] + ":=" + decodeField(goType)
+            # Fill structure
+            print "r = TL_" + self.name + "{"
+            for field in self.fields:
+                capField = field[0].capitalize()
+                print capField + ":" + field[0] + ","
+            print "}"
+        else:
+            print "r = TL_"+self.name+"{"
+            for field in self.fields:
+                goType = tl2goType(field[1])
+                capField = field[0].capitalize()
+                print capField+":"+decodeField(goType)+","
+            print "}"
 
     def encoding(self):
         # Encoding function
@@ -126,6 +182,9 @@ def parse(tlString):
     for chunk in chunks:
         if chunk.find(":") != -1:
             fieldName, fieldType = chunk.split(":")
+            # Because 'type' is reserved in Go
+            if fieldName == "type":
+                fieldName = "code_type"
             dotpos, ternpos = fieldType.find("."), fieldType.find("?")
             # bitset flag
             if dotpos != -1 and ternpos != -1:
@@ -164,3 +223,13 @@ if __name__ == "__main__":
         for line, tlObj in tlObjects:
             print "// "+line
             tlObj.translate()
+        print "func (m *DecodeBuf) ObjectGenerated(constructor uint32) (r TL) {"
+        print "switch constructor {"
+        for _, tlObj in tlObjects:
+            tlObj.decoding()
+        print "default:"
+        print "m.err = fmt.Errorf(\"Unknown constructor: %x\", constructor)"
+        print "return nil"
+        print "}"
+        print "return"
+        print "}"
