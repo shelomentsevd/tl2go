@@ -12,6 +12,8 @@ def tl2goType(tlType):
         return "int64"
     if tlType == "double":
         return "float64"
+    if tlType == "bytes":
+        return "[]byte"
     if tlType.find("Vector") != -1:
         fpos, spos = tlType.find("<"), tlType.find(">")
         return "[]" + tl2goType(tlType[fpos + 1:spos])
@@ -28,6 +30,8 @@ def encodeField(fieldName, fieldType):
         return "x.VectorLong(e." + fieldName + ")"
     elif fieldType == "[]string":
         return "x.VectorString(e." + fieldName + ")"
+    elif fieldType == "[]byte":
+        return "x.Bytes(e."+fieldName+")"
     elif fieldType == "int32":
         return "x.Int(e." + fieldName + ")"
     elif fieldType == "int64":
@@ -50,6 +54,8 @@ def decodeField(fieldType):
         return "m.VectorLong()"
     elif fieldType == "[]string":
         return "m.VectorString()"
+    elif fieldType == "[]byte":
+        return "m.StringBytes()"
     elif fieldType == "int32":
         return "m.Int()"
     elif fieldType == "int64":
